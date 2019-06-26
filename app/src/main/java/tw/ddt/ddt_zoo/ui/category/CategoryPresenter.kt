@@ -1,54 +1,22 @@
 package tw.ddt.ddt_zoo.ui.category
 
-import android.content.Context
 import android.os.Bundle
-import android.text.Html
-import android.text.method.LinkMovementMethod
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import io.reactivex.observers.DisposableObserver
-import tw.ddt.ddt_zoo.GlideApp
-import tw.ddt.ddt_zoo.R
 import tw.ddt.ddt_zoo.model.HomeModel
 import tw.ddt.ddt_zoo.model.plant.PlantModel
 import tw.ddt.ddt_zoo.model.plant.PlantRebuildModel
 import tw.ddt.ddt_zoo.model.plant.PlantResults
 import tw.ddt.ddt_zoo.retrofit.ZooApiClient
 
-class CategoryPresenter(private val context: Context?, private val categoryView: CategoryView) {
+class CategoryPresenter(bundle: Bundle?, private val categoryView: CategoryView) {
+
+    init {
+        categoryView.updateTopUI(bundle?.getParcelable("data"))
+    }
 
     fun updateActionbarTitle(bundle: Bundle?) {
         val homeData: HomeModel.Result.Results? = bundle?.getParcelable("data")
-
-        context?.let {
-            (it as AppCompatActivity).supportActionBar?.title = homeData?.E_Name
-        }
-    }
-
-    fun setTopUI(bundle: Bundle?, pic: ImageView, info: TextView, memo: TextView, category: TextView, web: TextView) {
-        val homeData: HomeModel.Result.Results? = bundle?.getParcelable("data")
-
-        context?.let {
-            GlideApp.with(it)
-                .load(homeData?.E_Pic_URL)
-                .placeholder(R.drawable.ic_loading)
-                .into(pic)
-        }
-        info.text = homeData?.E_Info
-        if (homeData?.E_Memo!!.isEmpty()) {
-            memo.text = "無休館資訊"
-        } else {
-            memo.text = homeData?.E_Memo
-        }
-        category.text = homeData?.E_Category
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            web.text = Html.fromHtml("<a href=\"${homeData?.E_URL}\">在網頁開啟</a>", Html.FROM_HTML_MODE_LEGACY)
-        } else {
-            web.text = Html.fromHtml("<a href=\"${homeData?.E_URL}\">在網頁開啟</a>")
-        }
-        web.movementMethod = LinkMovementMethod.getInstance()
+        homeData?.E_Name?.let { categoryView.updateActionbarTitle(it) }
     }
 
     fun queryPlantAPI() {
@@ -110,6 +78,8 @@ class CategoryPresenter(private val context: Context?, private val categoryView:
     }
 
     interface CategoryView {
+        fun updateActionbarTitle(value: String)
+        fun updateTopUI(data: HomeModel.Result.Results?)
         fun updateCell(data: PlantRebuildModel?)
         fun itemClick(data: PlantResults)
     }

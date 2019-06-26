@@ -37,7 +37,14 @@ class HomeFragment : Fragment(), HomePresenter.HomeView {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         if (root == null) {
             root = inflater.inflate(R.layout.fragment_home, container, false)
-            initView(root!!)
+            root?.let {
+                recyclerView = it.findViewById(R.id.recyclerView1)
+                progressBar = it.findViewById(R.id.progressBar)
+            }
+
+            initView()
+            homePresenter = HomePresenter(this)
+            homePresenter.questAPI()
         }
         return root
     }
@@ -47,10 +54,7 @@ class HomeFragment : Fragment(), HomePresenter.HomeView {
         activity?.actionBar?.title = getString(R.string.menu_home)
     }
 
-    private fun initView(root: View ) {
-        recyclerView = root.findViewById(R.id.recyclerView1)
-        progressBar = root.findViewById(R.id.progressBar)
-
+    private fun initView() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         adapter = HomeAdapter(this)
         recyclerView.adapter = adapter
@@ -59,9 +63,5 @@ class HomeFragment : Fragment(), HomePresenter.HomeView {
             (recyclerView.layoutManager as LinearLayoutManager).orientation
         )
         recyclerView.addItemDecoration(mDividerItemDecoration)
-
-        homePresenter = HomePresenter(this)
-        homePresenter.questAPI()
     }
-
 }

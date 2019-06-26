@@ -1,22 +1,54 @@
 package tw.ddt.ddt_zoo.ui.category
 
 import android.os.Bundle
+import android.text.Html
+import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import tw.ddt.ddt_zoo.GlideApp
 import tw.ddt.ddt_zoo.R
+import tw.ddt.ddt_zoo.model.HomeModel
 import tw.ddt.ddt_zoo.model.plant.PlantRebuildModel
 import tw.ddt.ddt_zoo.model.plant.PlantResults
 
 class CategoryFragment : Fragment(), CategoryPresenter.CategoryView {
+    override fun updateTopUI(data: HomeModel.Result.Results?) {
+        context?.let {
+            GlideApp.with(it)
+                .load(data?.E_Pic_URL)
+                .placeholder(R.drawable.ic_loading)
+                .into(pic)
+        }
+        info.text = data?.E_Info
+        if (data?.E_Memo!!.isEmpty()) {
+            memo.text = "無休館資訊"
+        } else {
+            memo.text = data?.E_Memo
+        }
+        category.text = data?.E_Category
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            web.text = Html.fromHtml("<a href=\"${data?.E_URL}\">在網頁開啟</a>", Html.FROM_HTML_MODE_LEGACY)
+        } else {
+            web.text = Html.fromHtml("<a href=\"${data?.E_URL}\">在網頁開啟</a>")
+        }
+        web.movementMethod = LinkMovementMethod.getInstance()
+    }
+
+    override fun updateActionbarTitle(value: String) {
+        (activity as AppCompatActivity).supportActionBar?.title = value
+    }
+
     override fun updateCell(data: PlantRebuildModel?) {
         adapter.setData(data)
         adapter.notifyDataSetChanged()
@@ -44,10 +76,22 @@ class CategoryFragment : Fragment(), CategoryPresenter.CategoryView {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         if (root == null) {
-            presenter = CategoryPresenter(context, this)
-            // initView
+
             root = inflater.inflate(R.layout.fragment_category, container, false)
-            initView(root!!)
+
+            root?.let {
+                recyclerView = it.findViewById(R.id.recyclerView1)
+                progressBar = it.findViewById(R.id.progressBar)
+                pic = it.findViewById(R.id.pic_image)
+                info = it.findViewById(R.id.textView5)
+                memo = it.findViewById(R.id.textView6)
+                category = it.findViewById(R.id.textView7)
+                web = it.findViewById(R.id.textView8)
+            }
+
+            initView()
+            presenter = CategoryPresenter(arguments, this)
+            presenter.queryPlantAPI()
         }
         return root
     }
@@ -57,15 +101,7 @@ class CategoryFragment : Fragment(), CategoryPresenter.CategoryView {
         presenter.updateActionbarTitle(arguments)
     }
 
-    private fun initView(root: View) {
-        recyclerView = root.findViewById(R.id.recyclerView1)
-        progressBar = root.findViewById(R.id.progressBar)
-        pic = root.findViewById(R.id.pic_image)
-        info = root.findViewById(R.id.textView5)
-        memo = root.findViewById(R.id.textView6)
-        category = root.findViewById(R.id.textView7)
-        web = root.findViewById(R.id.textView8)
-
+    private fun initView() {
         recyclerView.layoutManager = LinearLayoutManager(context)
         adapter = CategoryAdapter(this)
         recyclerView.adapter = adapter
@@ -75,10 +111,6 @@ class CategoryFragment : Fragment(), CategoryPresenter.CategoryView {
             (recyclerView.layoutManager as LinearLayoutManager).orientation
         )
         recyclerView.addItemDecoration(mDividerItemDecoration)
-
-        presenter.setTopUI(arguments, pic, info, memo, category, web)
-
-        presenter.queryPlantAPI()
     }
 
 }
