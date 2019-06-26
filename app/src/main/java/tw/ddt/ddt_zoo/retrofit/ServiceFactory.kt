@@ -8,12 +8,15 @@ import java.util.Date
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import tw.ddt.ddt_zoo.MyApp
 import tw.ddt.ddt_zoo.retrofit.service.ZooService
 
 class ServiceFactory {
     companion object {
         fun getZooService(): ZooService {
-//            if (MyApp.zooService != null) return MyApp.zooService
+            MyApp.zooService?.let {
+                return it
+            }
 
             val retrofit = addBaseOperation(
                 Retrofit.Builder().baseUrl("https://data.taipei")
